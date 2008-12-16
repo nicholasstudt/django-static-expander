@@ -1,7 +1,13 @@
 from django.http import Http404
 from django.shortcuts import render_to_response
 
+### urlconf 
+# urlpatterns = patterns('', 
+#   url(r'^(?P<url>.*)/$', 'path.to.xpander')
+# )
+
 BASE_XPANDER_PATH = "/where/ever/"
+
 
 def xpander(request, url):
    

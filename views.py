@@ -20,6 +20,6 @@ def xpander(request, url):
     if not os.path.exists(fname):
         raise Http404
     else:
-        return render_to_response( "some/template.html", 
+        return render_to_response( "expander/base.html", 
                                     {'data': open(fname).read()}
                                     )

@@ -6,8 +6,9 @@ from django.http import Http404
 from django.shortcuts import render_to_response
 from django.utils.safestring import mark_safe
 
-# ALLOWED_INCLUDE_ROOTS <-- Require document root to be in this ?
-# Use MEDIA_ROOT as DOCUMENT_ROOT ?
+# Todo: 
+# - Handle the auth correctly.
+# - Make it deal with the default page (index.htm/l) correctly. 
 
 def serve(request, url, document_root=None, require_auth=False):
     """
@@ -16,13 +17,13 @@ def serve(request, url, document_root=None, require_auth=False):
 	To use, put a URL pattern such as: 
 
 		url(r'^(?P<url>.*.html)$', 'expander.serve',
-			 	{'document_root' : '/path/to/my/files/'})
+			 	{'document_root' : '/path/to/my/files/'}),
 
     or
 
 		url(r'^(?P<url>.*.html)$', 'expander.serve',
 			 	{'document_root' : '/path/to/my/files/',
-			 	'require_auth' : True })
+			 	'require_auth' : True }),
 
 	in your URLconf. The "document root" param must be provided, otherwise a
 	404 error will be raised.

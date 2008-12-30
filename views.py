@@ -61,6 +61,7 @@ def serve(request, url, document_root=None, require_auth=False):
     if not os.path.exists(fullpath):
         raise Http404, '"%s" does not exist' % fullpath
 
+    # If it's not a file then try adding default_page 
     if not os.path.isfile(fullpath):
         raise Http404, '"%s" does not exist' % fullpath
 

@@ -1,17 +1,19 @@
-import os
-import posixpath
-import urllib
-import stat
 import mimetypes
+import os
+import stat
+import urllib
 
-from django.http import Http404, HttpResponse
+from django.conf import settings
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.utils.safestring import mark_safe
 from django.utils.http import http_date
 
 # Todo: 
 # - Handle the auth correctly -- It does, just needs a login page now.
-def serve(request, url, document_root=None, require_auth=False, perms=None, directory_index=None, extensions=('.html')):
+# - Should probably make this honor the not modified since stuff.
+def serve(request, url, document_root=None, require_auth=False, perms=None, 
+          directory_index=('index.html'), extensions=('.html')):
     """
 	Serve static content wrapped inside of the sites template.
 
@@ -20,29 +22,22 @@ def serve(request, url, document_root=None, require_auth=False, perms=None, dire
 		url(r'^(?P<url>.*.html)$', 'expander.serve',
 			 	{'document_root' : '/path/to/my/files/',
                  'directory_index' : ('index.html','index.htm')} 
-                 'extensions' : ('index.html','index.htm')} 
-                ),
-
-    or
-
-		url(r'^(?P<url>.*.html)$', 'expander.serve',
-			 	{'document_root' : '/path/to/my/files/',
-			 	'require_auth' : True,
-                'perms' : ('can_add',)},
+                 'extensions' : ('.html','.htm')} 
+			 	 'require_auth' : True,
+                 'perms' : ('can_add',)},
                 ),
 
 	in your URLconf. The "document root" param must be provided, otherwise a
 	404 error will be raised.
 
-    If you want directory index to work match on r'^(?P<url>.*)$'.
-    However, you must ensure that all real files are excluded from
-    reaching django with a location match.
+    In order to make directory indexes work specify the valid index
+    files in a list.
     """
     if document_root is None:
         raise Http404, '"%s" does not exist' % url
 
     # Decode all the % ecoded stuff.
-    path = posixpath.normpath(urllib.unquote(url))
+    path = os.path.normpath(urllib.unquote(url))
     path = path.lstrip('/')
     newpath = ''
     for part in path.split('/'):
@@ -77,6 +72,9 @@ def serve(request, url, document_root=None, require_auth=False, perms=None, dire
 
     # If it's not a file then try adding default_page 
     if os.path.isdir(fullpath): 
+        if not url.endswith('/') and settings.APPEND_SLASH:
+            return HttpResponseRedirect("%s/" % request.path)
+
         realpath = None
         for part in directory_index:
             realpath = os.path.join(fullpath, part).replace('\\', '/')
@@ -84,12 +82,10 @@ def serve(request, url, document_root=None, require_auth=False, perms=None, dire
                 break
         if realpath is not None:
             fullpath = realpath
-    
-    if not os.path.isfile(fullpath):
+   
+    # Not a file or we can't read it.
+    if not os.path.isfile(fullpath) or not os.access(fullpath, os.R_OK):
         raise Http404, '"%s" does not exist' % fullpath
-
-    if not os.access(fullpath, os.R_OK):
-        raise Http404, '"%s" does not exist' % fullpath 
 
     if os.path.splitext(fullpath)[1] not in extensions:
         statobj = os.stat(fullpath)
@@ -99,8 +95,7 @@ def serve(request, url, document_root=None, require_auth=False, perms=None, dire
         response["Last-Modified"] = http_date(statobj[stat.ST_MTIME])
         response["Content-Length"] = len(contents)
         return response
-    else:
 
     # Finally, send the response to the user.
-        return render_to_response( "expander/base.html", 
-                                {'data': mark_safe(open(fullpath).read())} )
+    return render_to_response( "expander/base.html", 
+                               {'data': mark_safe(open(fullpath).read())} )

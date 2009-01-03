@@ -50,7 +50,7 @@ setup(
     author = 'Nicholas Studt',
     author_email = 'nicholas@photodwarf.org',
     url = 'http://photodwarf.org/',
-    description = 'Django application to apply templates to files on disk.',
+    description = 'Django application to apply templates to static files on disk.',
     packages = packages, 
     data_files = data_files,
     requires = ('django (>=1.0.2)',),

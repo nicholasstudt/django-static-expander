@@ -30,7 +30,7 @@ packages, data_files = [], []
 root_dir = os.path.dirname(__file__)
 if root_dir != '':
     os.chdir(root_dir)
-application_dir = 'app-expander'
+application_dir = 'static_expander'
   
 for dirpath, dirnames, filenames in os.walk(application_dir):
     # Ignore dirnames that start with '.'
@@ -41,13 +41,18 @@ for dirpath, dirnames, filenames in os.walk(application_dir):
     elif filenames:
         data_files.append([dirpath, [os.path.join(dirpath, f) for f in filenames]])
 
+# Get the version from static_expander.VERSION
+version = __import__('static_expander').get_version()
+
 setup(
-    name = "Expander",
-    version = '0.0.1',
+    name = "django-static-expander",
+    version = version.replace(' ', '-'),
     author = 'Nicholas Studt',
     author_email = 'nicholas@photodwarf.org',
-    description = 'Apply templates to files on disk.',
+    url = 'http://photodwarf.org/',
+    description = 'Django application to apply templates to files on disk.',
     packages = packages, 
     data_files = data_files,
+    requires = ('django (>=1.0.2)',),
 )
 

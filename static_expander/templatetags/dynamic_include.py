@@ -48,8 +48,11 @@ class DynamicIncludeNode(template.Node):
                     output = ''
                 return output
         else:
+
             # Walk the directory including till we get to root...
             # What is the current url ?
+            #current_path = template.resolve_variable('request.path', context)
+
             return self.path
 
 #@register.tag

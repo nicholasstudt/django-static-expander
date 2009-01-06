@@ -1,5 +1,7 @@
 import mimetypes
-import os, stat, urllib
+import os
+import stat
+import urllib
 
 from django import http, template
 from django.conf import settings

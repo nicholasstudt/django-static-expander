@@ -66,8 +66,8 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 
 		url(r'^(?P<url>.*.html)$', 'expander.serve',
 			 	{'document_root' : '/path/to/my/files/',
-                 'directory_index' : ('index.html','index.htm')} 
-                 'extensions' : ('.html','.htm')} 
+                 'directory_index' : ('index.html','index.htm'),
+                 'extensions' : ('.html','.htm'),
 			 	 'require_auth' : True,
                  'perms' : ('can_add',)},
                 ),
@@ -115,7 +115,7 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 
     # If it's not a file then try adding default_page 
     if os.path.isdir(fullpath): 
-        if not url.endswith('/') and settings.APPEND_SLASH:
+        if url and not url.endswith('/') and settings.APPEND_SLASH:
             return http.HttpResponseRedirect("%s/" % request.path)
 
         realpath = None

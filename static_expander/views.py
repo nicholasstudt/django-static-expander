@@ -110,7 +110,10 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
             return _checklogin(request, perms)
 
     # Return a 404 if we don't exists
-    if not os.path.exists(fullpath):
+    try: 
+        if not os.path.exists(fullpath):
+            raise http.Http404, '"%s" does not exist' % fullpath
+    except UnicodeEncodeError:
         raise http.Http404, '"%s" does not exist' % fullpath
 
     # If it's not a file then try adding default_page 

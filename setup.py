@@ -51,7 +51,7 @@ setup(
     author_email = 'nicholas@photodwarf.org',
     url = 'http://photodwarf.org/',
     description = 'Django application to apply templates to static files on disk.',
-    packages = packages, 
+    packages = packages,
     data_files = data_files,
     requires = ('django (>=1.0.2)',),
 )

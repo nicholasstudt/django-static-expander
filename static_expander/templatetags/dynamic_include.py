@@ -53,9 +53,12 @@ class DynamicIncludeNode(template.Node):
             parts = test_path.split('/')
 
             # Walk the directory including till we get to root...
-            while parts and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
-                parts = parts[0:-1] # Shrink parts by 1
-                test_path = str.join(os.sep, parts)
+            try:
+                while parts and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
+                    parts = parts[0:-1] # Shrink parts by 1
+                    test_path = str.join(os.sep, parts)
+            except UnicodeEncodeError:
+                test_path = ''
 
             fullpath = str.join(os.sep, (document_root, test_path, include, ))
 

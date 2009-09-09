@@ -1,5 +1,5 @@
 Revison history.
 
-1.0.2-final
+1.0.2:
  - Added try/except to deal with unmapped Unicode in path for dynamic
    includes.

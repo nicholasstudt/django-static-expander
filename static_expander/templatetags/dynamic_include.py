@@ -9,8 +9,10 @@ from django.conf import settings
 register = template.Library()
 
 class DynamicIncludeNode(template.Node):
-    def __init__(self, include_file):
+    def __init__(self, include_file, no_recurse = None, var_name = None):
         self.include_file = include_file
+        self.no_recurse = no_recurse
+        self.var_name = var_name
     def render(self, context):
         """ Open and read the file, after we work it out... """ 
         document_root = settings.DOCUMENT_ROOT
@@ -49,14 +51,26 @@ class DynamicIncludeNode(template.Node):
                 else:
                     return '' # Fail Silently, we don't have context
  
-            test_path = request.path.lstrip('/').rstrip('/')
+            # If we aren't recursing, check if the right side of the current
+            # path is a /.  If it isn't strip the string to the previous slash.
+            if self.no_recurse:
+                test_path = request.path
+                if len(test_path) > 0:
+                    if test_path[-1] != '/':
+                        test_path = test_path[0:test_path.rindex('/')]
+                test_path.lstrip('/')
+            else:
+                test_path = request.path.lstrip('/').rstrip('/')
+
             parts = test_path.split('/')
 
             # Walk the directory including till we get to root...
+            # Unless the no_recurse flag is !None
             try:
-                while parts and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
-                    parts = parts[0:-1] # Shrink parts by 1
-                    test_path = str.join(os.sep, parts)
+                if not self.no_recurse:
+                    while parts and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
+                        parts = parts[0:-1] # Shrink parts by 1
+                        test_path = str.join(os.sep, parts)
             except UnicodeEncodeError:
                 test_path = ''
 
@@ -68,7 +82,18 @@ class DynamicIncludeNode(template.Node):
             fp.close()
         except IOError:
             output = ''
-        
+    
+        # Add to the page context if requested
+        if self.var_name:
+
+            # Why do we need this, does mark save not work with empty
+            # strings ?
+            if output == '':
+                return ''
+
+            context[self.var_name] = mark_safe(output)
+            return ''
+
         return output
 
 #@register.tag
@@ -84,13 +109,39 @@ def dynamic_include(parser, token):
 
     Example::
 
-        {% dynamic_include /path/from/document_root %}
-        {% dynamic_include relative_to_current_url.html %}
+        {% dynamic_include /path/from/document_root [no_recurse] [as var_name] %}
+        {% dynamic_include relative_to_current_url.html [no_recurse] [as var_name] %}
     """
     bits = token.contents.split()
     if not settings.DOCUMENT_ROOT:
         raise template.TemplateSyntaxError, "%r tag requires DOCUMENT_ROOT variable be defined in settings.py" % bits[0]
-    if len(bits) != 2:
-        raise template.TemplateSyntaxError, "%r tag requires a single argument: the name of the file to be included" % bits[0]
-    return DynamicIncludeNode(bits[1])
+
+    no_recurse = None
+    var_name = None
+
+    # Check that we have enough arguments and not too many
+    if len(bits) < 2:
+        raise template.TemplateSyntaxError, "%r tag requires at least a single argument: the name of the file to be included" % bits[0]
+
+    if len(bits) > 5:
+        raise template.TemplateSyntaxError, "%r tag must have no more than four arguments" % bits[0]
+
+    # Check for the no_recurse flag only
+    if len(bits) == 3:
+        no_recurse = True
+
+    # Check for both no_recurse and "as var_name"
+    if len(bits) > 3:
+        if bits[2].lower() == 'as':
+            var_name = bits[3]
+            #If there is an extra arg, then assume no_recurse is set.
+            if len(bits) == 5:
+                no_recurse = True
+        else:
+            no_recurse = True
+            if not bits[3].lower() == 'as':
+                raise template.TemplateSyntaxError, "If %r tag has more than two arguments, it must include the \"as var_name\" argument" % bits[0]
+            var_name = bits[4]
+    
+    return DynamicIncludeNode(bits[1], no_recurse = no_recurse, var_name = var_name)
 dynamic_include = register.tag(dynamic_include)

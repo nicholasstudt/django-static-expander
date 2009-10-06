@@ -1,5 +1,9 @@
 Revison history.
 
+1.0.3
+ - Added no_recurse option and "as var_name" option to the
+   dynamic_include template tag. (Contributed by Carson Gee) 
+
 1.0.2:
  - Added try/except to deal with unmapped Unicode in path for dynamic
    includes.

@@ -58,7 +58,8 @@ def _checklogin(request, perms):
 
 # - Should probably make this honor the not modified since stuff.
 def serve(request, url, document_root=None, require_auth=False, perms=None, 
-          directory_index=('index.html'), extensions=('.html')):
+          directory_index=('index.html'), extensions=('.html'),
+          base_template='expander/base.html'):
     """
 	Serve static content wrapped inside of the sites template.
 
@@ -70,6 +71,7 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
                  'extensions' : ('.html','.htm'),
 			 	 'require_auth' : True,
                  'perms' : ('can_add',)},
+                 'base_template': 'base.html'
                 ),
 
 	in your URLconf. The "document root" param must be provided, otherwise a
@@ -143,6 +145,6 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
         return response
 
     # Finally, send the response to the user.
-    return render_to_response("expander/base.html", 
+    return render_to_response(base_template,
                               {'data': mark_safe(open(fullpath).read())},
                               context_instance=template.RequestContext(request))

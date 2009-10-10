@@ -9,10 +9,12 @@ from django.conf import settings
 register = template.Library()
 
 class DynamicIncludeNode(template.Node):
+
     def __init__(self, include_file, no_recurse = None, var_name = None):
         self.include_file = include_file
         self.no_recurse = no_recurse
         self.var_name = var_name
+
     def render(self, context):
         """ Open and read the file, after we work it out... """ 
         document_root = settings.DOCUMENT_ROOT
@@ -51,26 +53,20 @@ class DynamicIncludeNode(template.Node):
                 else:
                     return '' # Fail Silently, we don't have context
  
-            # If we aren't recursing, check if the right side of the current
-            # path is a /.  If it isn't strip the string to the previous slash.
-            if self.no_recurse:
-                test_path = request.path
-                if len(test_path) > 0:
-                    if test_path[-1] != '/':
-                        test_path = test_path[0:test_path.rindex('/')]
-                test_path.lstrip('/')
-            else:
-                test_path = request.path.lstrip('/').rstrip('/')
+            # If request.path is a directory use it, or remove file
+            if os.path.isdir(str.join(os.sep, (document_root, request.path))):
+                test_path = request.path.lstrip('/').rstrip('/') 
+            else: 
+                test_path = os.path.dirname(request.path).lstrip('/')
 
             parts = test_path.split('/')
 
             # Walk the directory including till we get to root...
             # Unless the no_recurse flag is !None
             try:
-                if not self.no_recurse:
-                    while parts and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
-                        parts = parts[0:-1] # Shrink parts by 1
-                        test_path = str.join(os.sep, parts)
+                while parts and not self.no_recurse and not os.access(str.join(os.sep, (document_root, test_path, include)), os.R_OK):
+                    parts = parts[0:-1] # Shrink parts by 1
+                    test_path = str.join(os.sep, parts)
             except UnicodeEncodeError:
                 test_path = ''
 
@@ -83,15 +79,11 @@ class DynamicIncludeNode(template.Node):
         except IOError:
             output = ''
     
-        # Add to the page context if requested
-        if self.var_name:
-
-            # Why do we need this, does mark save not work with empty
-            # strings ?
-            if output == '':
-                return ''
+        # Add to the page context if requested and has output
+        if self.var_name and output:
 
             context[self.var_name] = mark_safe(output)
+
             return ''
 
         return output

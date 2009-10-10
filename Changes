@@ -1,6 +1,6 @@
 Revison history.
 
-1.0.3
+1.0.3 Fri Oct  9 21:33:57 CDT 2009
  - Added no_recurse option and "as var_name" option to the
    dynamic_include template tag. (Contributed by Carson Gee) 
 

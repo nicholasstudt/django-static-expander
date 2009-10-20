@@ -65,7 +65,7 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 
 	To use, put a URL pattern such as: 
 
-		url(r'^(?P<url>.*.html)$', 'expander.serve',
+		url(r'^(?P<url>.*.html)$', 'static_expander.views.serve',
 			 	{'document_root' : '/path/to/my/files/',
                  'directory_index' : ('index.html','index.htm'),
                  'extensions' : ('.html','.htm'),

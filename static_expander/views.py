@@ -144,7 +144,11 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
         response["Content-Length"] = len(contents)
         return response
 
-    # Finally, send the response to the user.
-    return render_to_response(base_template,
-                              {'data': mark_safe(open(fullpath).read())},
-                              context_instance=template.RequestContext(request))
+    # Finally, send the response to the user. This construct allows the
+    # page to contain template directives. 
+    t = template.Template("{%% extends \"%s\" %%}{%% block content %%}%s{%% endblock %%}" % (base_template, open(fullpath).read())) 
+    
+    return http.HttpResponse(t.render(template.RequestContext(request)))
+#   return render_to_response(base_template,
+#                             {'data': mark_safe(open(fullpath).read())},
+#                             context_instance=template.RequestContext(request))

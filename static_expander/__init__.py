@@ -1,10 +1,10 @@
-VERSION = (1, 0, 3, 'final', 20090908)
+VERSION = (1, 3, 1)
 
 def get_version():
-    version = '%s.%s.%s' % (VERSION[0], VERSION[1], VERSION[2]) 
+    version = '%s.%s' % (VERSION[0], VERSION[1]) 
     
-    if VERSION[3] != 'final':
-        version = '%s %s' % (version, VERSION[4])
+    if VERSION[2] > 0: # BUG Fix releases.
+        version = '%s.%s.%s' % (VERSION[0], VERSION[1], VERSION[2]) 
 
     return version
 

@@ -1,12 +1,16 @@
 Revison history.
 
-1.0.3 Mon Oct 19 21:06:28 CDT 2009:
+1.3.1 Wed Oct 21 09:39:27 CDT 2009:
+ - Added missing import for mark_safe.
+ - Fixed version numbers to be <major>.<minor>[.<bugfix>] 
+
+1.3 Mon Oct 19 21:06:28 CDT 2009:
  - Added no_recurse option and "as var_name" option to the
    dynamic_include template tag. (Contributed by Carson Gee) 
  - Added the ability for the page that is being included to be parsed as
    a template itself. This allows for template tags in the individual
    pages.
 
-1.0.2:
+1.2:
  - Added try/except to deal with unmapped Unicode in path for dynamic
    includes.

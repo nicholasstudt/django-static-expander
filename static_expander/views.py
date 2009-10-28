@@ -58,8 +58,8 @@ def _checklogin(request, perms):
 
 # - Should probably make this honor the not modified since stuff.
 def serve(request, url, document_root=None, require_auth=False, perms=None, 
-          directory_index=('index.html'), extensions=('.html'),
-          base_template='expander/base.html'):
+          content_as_template=False, directory_index=('index.html'),
+          extensions=('.html'), base_template='expander/base.html'):
     """
 	Serve static content wrapped inside of the sites template.
 
@@ -70,12 +70,16 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
                  'directory_index' : ('index.html','index.htm'),
                  'extensions' : ('.html','.htm'),
 			 	 'require_auth' : True,
+                 'content_as_template' : True,
                  'perms' : ('can_add',)},
                  'base_template': 'base.html'
                 ),
 
 	in your URLconf. The "document root" param must be provided, otherwise a
 	404 error will be raised.
+
+    If 'content_as_template' is set to true static content will be
+    rendered as a template, rather than simply included.
 
     In order to make directory indexes work specify the valid index
     files in a list.
@@ -144,11 +148,13 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
         response["Content-Length"] = len(contents)
         return response
 
+    if content_as_template:
     # Finally, send the response to the user. This construct allows the
     # page to contain template directives. 
-    t = template.Template("{%% extends \"%s\" %%}{%% block content %%}%s{%% endblock %%}" % (base_template, open(fullpath).read())) 
+        t = template.Template("{%% extends \"%s\" %%}{%% block content %%}%s{%% endblock %%}" % (base_template, open(fullpath).read())) 
     
-    return http.HttpResponse(t.render(template.RequestContext(request)))
-#   return render_to_response(base_template,
-#                             {'data': mark_safe(open(fullpath).read())},
-#                             context_instance=template.RequestContext(request))
+        return http.HttpResponse(t.render(template.RequestContext(request)))
+    
+    return render_to_response(base_template,
+                              {'data': mark_safe(open(fullpath).read())},
+                              context_instance=template.RequestContext(request))

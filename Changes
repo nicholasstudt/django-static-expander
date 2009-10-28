@@ -1,5 +1,9 @@
 Revison history.
 
+1.3.2 Tue Oct 27 21:02:21 CDT 2009:
+ - Added content_as_template option to turn off/on the ability for pages
+   to be parsed as a template. 
+
 1.3.1 Wed Oct 21 09:39:27 CDT 2009:
  - Added missing import for mark_safe.
  - Fixed version numbers to be <major>.<minor>[.<bugfix>] 

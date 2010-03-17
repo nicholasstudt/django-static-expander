@@ -6,6 +6,7 @@ import urllib
 from django import http, template
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.core.servers.basehttp import FileWrapper
 from django.shortcuts import render_to_response
 from django.utils.http import http_date
 from django.utils.safestring import mark_safe
@@ -140,12 +141,14 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
         raise http.Http404, '"%s" does not exist' % fullpath
 
     if os.path.splitext(fullpath)[1] not in extensions:
-        statobj = os.stat(fullpath)
+        # Serve file, don't let the whole thing into memory. 
         mimetype = mimetypes.guess_type(fullpath)[0] or 'application/octet-stream'
-        contents = open(fullpath, 'rb').read()
-        response = http.HttpResponse(contents, mimetype=mimetype)
-        response["Last-Modified"] = http_date(statobj[stat.ST_MTIME])
-        response["Content-Length"] = len(contents)
+
+        wrapper = FileWrapper(file(fullpath))
+        response = http.HttpResponse(wrapper, mimetype=mimetype)
+        response["Last-Modified"] = http_date(os.path.getmtime(fullpath))
+        response["Content-Length"] = os.path.getsize(fullpath)
+
         return response
 
     if content_as_template:

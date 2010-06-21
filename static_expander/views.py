@@ -72,9 +72,9 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
                  'extensions' : ('.html','.htm'),
 			 	 'require_auth' : True,
                  'content_as_template' : True,
-                 'perms' : ('can_add',)},
+                 'perms' : ('can_add',)
                  'base_template': 'base.html'
-                ),
+                }),
 
 	in your URLconf. The "document root" param must be provided, otherwise a
 	404 error will be raised.
@@ -84,6 +84,16 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 
     In order to make directory indexes work specify the valid index
     files in a list.
+
+		url(r'^(?P<url>.*.html)$', 
+                login_required(static_expander.views.serve),
+			 	{'document_root' : '/path/to/my/files/',
+                 'directory_index' : ('index.html','index.htm'),
+                 'extensions' : ('.html','.htm'),
+                 'content_as_template' : True,
+                 'base_template': 'base.html'
+                }),
+
     """
     if document_root is None:
         raise http.Http404, '"%s" does not exist' % url

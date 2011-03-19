@@ -5,60 +5,58 @@ import urllib
 
 from django import http, template
 from django.conf import settings
-from django.contrib.auth import authenticate, login
 from django.core.servers.basehttp import FileWrapper
 from django.shortcuts import render_to_response
 from django.utils.http import http_date
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy, ugettext as _
+from django.contrib.auth.decorators import login_required
 
-ERROR_MESSAGE = ugettext_lazy("Please enter a correct username and password. Note that both fields are case-sensitive.")
-LOGIN_FORM_KEY = 'this_is_the_login_form'
 
-# _checklogin Based on _checklogin from django.contrib.admin.views.decorators
-def _checklogin(request, perms):
-    def _display_login_form(request, error_message=''):
-        request.session.set_test_cookie()
-        
-        return render_to_response('expander/login.html', {
-            'title': _('Log in'),
-            'app_path': request.get_full_path(),
-            'error_message': error_message
-            }, context_instance=template.RequestContext(request))
+@login_required
+def secure(request, url, document_root=None, perms=None, 
+                 content_as_template=False, directory_index=('index.html'),
+                 extensions=('.html'), base_template='expander/base.html'):
 
-    # If this isn't already the login page, display it.
-    if LOGIN_FORM_KEY not in request.POST:
-        if request.POST:
-            message = _("Please log in again, because your session has expired.")
-        else:
-            message = ""
-        return _display_login_form(request, message)
+    """
 
-    # Check that the user accepts cookies.
-    if not request.session.test_cookie_worked():
-        message = _("Looks like your browser isn't configured to accept cookies. Please enable cookies, reload this page, and try again.")
-        return _display_login_form(request, message)
-    else:
-        request.session.delete_test_cookie()
+    Serve static content but require the user to be logged in, this 
 
-    # Check the password.
-    username = request.POST.get('username', None)
-    password = request.POST.get('password', None)
-    user = authenticate(username=username, password=password)
+		url(r'^(?P<url>.*.html)$', 'static_expander.views.secure',
+			 	{'document_root' : '/path/to/my/files/',
+                 'directory_index' : ('index.html','index.htm'),
+                 'extensions' : ('.html','.htm'),
+                }),
 
-    if user is None:
-        return _display_login_form(request, ERROR_MESSAGE)
-    elif user.is_active and perms is None:
-        login(request, user)
-        return http.HttpResponseRedirect(request.get_full_path())
-    elif user.is_active and perms and not request.user.has_perms(perms):
-        login(request, user)
-        return http.HttpResponseRedirect(request.get_full_path())
-    else:
-        return _display_login_form(request, ERROR_MESSAGE)
+    is the same as
+
+		url(r'^(?P<url>.*.html)$', 
+                login_required('static_expander.views.serve'),
+			 	{'document_root' : '/path/to/my/files/',
+                 'directory_index' : ('index.html','index.htm'),
+                 'extensions' : ('.html','.htm'),
+                }),
+
+   
+    Any of the decorators can be used in this fashion. The secure view
+    is simply a convience function.
+
+    This method does require that the "regiration/login.html" template
+    exists and that LOGIN_URL and LOGIN_REDIRECT_URL be set in your
+    settings file. You will also need to include the following in your
+    URLconf: 
+
+        (r'^accounts/login/$', 'django.contrib.auth.views.login'),
+
+
+    """
+
+    return serve(request, url, document_root, perms, content_as_template, 
+                 directory_index, extensions, base_template)
+ 
 
 # - Should probably make this honor the not modified since stuff.
-def serve(request, url, document_root=None, require_auth=False, perms=None, 
+def serve(request, url, document_root=None, perms=None, 
           content_as_template=False, directory_index=('index.html'),
           extensions=('.html'), base_template='expander/base.html'):
     """
@@ -70,7 +68,6 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 			 	{'document_root' : '/path/to/my/files/',
                  'directory_index' : ('index.html','index.htm'),
                  'extensions' : ('.html','.htm'),
-			 	 'require_auth' : True,
                  'content_as_template' : True,
                  'perms' : ('can_add',)
                  'base_template': 'base.html'
@@ -85,14 +82,8 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
     In order to make directory indexes work specify the valid index
     files in a list.
 
-		url(r'^(?P<url>.*.html)$', 
-                login_required(static_expander.views.serve),
-			 	{'document_root' : '/path/to/my/files/',
-                 'directory_index' : ('index.html','index.htm'),
-                 'extensions' : ('.html','.htm'),
-                 'content_as_template' : True,
-                 'base_template': 'base.html'
-                }),
+    Note: If your URLconf regex includes non-html files they will also
+    be served by this method.
 
     """
     if document_root is None:
@@ -119,13 +110,6 @@ def serve(request, url, document_root=None, require_auth=False, perms=None,
 
     fullpath = os.path.join(document_root, newpath)
     
-    # Send to auth if we require auth and not authenticated.
-    if require_auth:
-        if not request.user.is_authenticated():
-            return _checklogin(request, perms)
-        elif perms and not request.user.has_perms(perms):
-            return _checklogin(request, perms)
-
     # Return a 404 if we don't exists
     try: 
         if not os.path.exists(fullpath):

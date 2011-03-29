@@ -102,6 +102,8 @@ def dynamic_include(parser, token):
 
     Example::
 
+        {% load dynamic_include %}
+
         {% dynamic_include /path/from/document_root [no_recurse] [as var_name] %}
         {% dynamic_include relative_to_current_url.html [no_recurse] [as var_name] %}
     """

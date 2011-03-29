@@ -6,10 +6,10 @@ import urllib
 from django import http, template
 from django.conf import settings
 from django.core.servers.basehttp import FileWrapper
+
 from django.shortcuts import render_to_response
 from django.utils.http import http_date
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy, ugettext as _
 from django.contrib.auth.decorators import login_required
 
 
@@ -17,7 +17,6 @@ from django.contrib.auth.decorators import login_required
 def secure(request, url, document_root=None, perms=None, 
                  content_as_template=False, directory_index=('index.html'),
                  extensions=('.html'), base_template='expander/base.html'):
-
     """
 
     Serve static content but require the user to be logged in, this 
@@ -37,11 +36,11 @@ def secure(request, url, document_root=None, perms=None,
                  'extensions' : ('.html','.htm'),
                 }),
 
-   
-    Any of the decorators can be used in this fashion. The secure view
-    is simply a convience function.
+    Any of the decorators can be used in this fashion shown in the
+    second example. The secure view is simply a convenience method for
+    the most common case of loging_required.
 
-    This method does require that the "regiration/login.html" template
+    This method does require that the "registration/login.html" template
     exists and that LOGIN_URL and LOGIN_REDIRECT_URL be set in your
     settings file. You will also need to include the following in your
     URLconf: 
@@ -73,17 +72,25 @@ def serve(request, url, document_root=None, perms=None,
                  'base_template': 'base.html'
                 }),
 
-	in your URLconf. The "document root" param must be provided, otherwise a
+	in your URLconf. The "document_root" param must be provided, otherwise a
 	404 error will be raised.
 
     If 'content_as_template' is set to true static content will be
-    rendered as a template, rather than simply included.
+    rendered as a template, rather than simply included. The default
+    value is False.
 
     In order to make directory indexes work specify the valid index
-    files in a list.
+    files in a list. The default directory index is "index.html"
+
+    The extensions parameter controls which file types are included into
+    the templates or sent out raw. The default extension is ".html".
+
+    The base_template parameter specifies the base template for the
+    expander to utilize, the default is "expander/base.html".
 
     Note: If your URLconf regex includes non-html files they will also
-    be served by this method.
+    be served by this method. This will be slower than serving these
+    files directly from your web server.
 
     """
     if document_root is None:

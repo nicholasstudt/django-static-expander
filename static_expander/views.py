@@ -68,7 +68,6 @@ def serve(request, url, document_root=None, perms=None,
                  'directory_index' : ('index.html','index.htm'),
                  'extensions' : ('.html','.htm'),
                  'content_as_template' : True,
-                 'perms' : ('can_add',)
                  'base_template': 'base.html'
                 }),
 

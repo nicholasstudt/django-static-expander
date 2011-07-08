@@ -1,5 +1,8 @@
 Revison history.
 
+1.4.1
+ - Trap unicode error from dynamic include tag.
+
 1.4.0
  - Remove the duplication of the login form, use of the configured
    authentication locations using LOGIN_URL and LOGING_REDIRECT_URL are

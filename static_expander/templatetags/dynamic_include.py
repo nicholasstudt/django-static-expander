@@ -55,10 +55,14 @@ class DynamicIncludeNode(template.Node):
                     return '' # Fail Silently, we don't have context
  
             # If request.path is a directory use it, or remove file
-            if os.path.isdir(str.join(os.sep, (document_root, request.path))):
-                test_path = request.path.lstrip('/').rstrip('/') 
-            else: 
-                test_path = os.path.dirname(request.path).lstrip('/')
+            try:
+                if os.path.isdir(str.join(os.sep, 
+                                          (document_root, request.path))):
+                    test_path = request.path.lstrip('/').rstrip('/') 
+                else: 
+                    test_path = os.path.dirname(request.path).lstrip('/')
+            except UnicodeEncodeError:
+                test_path = ''
 
             parts = test_path.split('/')
 

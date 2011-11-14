@@ -1,0 +1,122 @@
+django-static-expander
+======================================================
+
+This project allows static pages to be expanded and served with the
+Django template system.
+
+Features
+--------
+
+ * Ability for the pages being served to utilize template tags,
+   'content_as_template' flag controls this behavior.
+ * dynamic include template tag updated to add no_recurse option and
+   ability to save results into a variable.
+
+Example Usage
+-------------
+
+ Serving static content example:
+
+    url(r'^(?P<url>.*.html)$', 'static_expander.views.serve',
+        {'document_root' : '/path/to/my/files/',
+         'directory_index' : ('index.html','index.htm'),
+         'extensions' : ('.html','.htm'),
+         'content_as_template' : True,
+         'base_template': 'base.html' }),
+
+ Serving static content, but require the user to be logged in:
+
+    url(r'^(?P<url>.*.html)$', 'static_expander.views.secure',
+        {'document_root' : '/path/to/my/files/',
+         'directory_index' : ('index.html','index.htm'),
+         'extensions' : ('.html','.htm'), }),
+
+ or
+
+    url(r'^(?P<url>.*.html)$', login_required('static_expander.views.serve'),
+        {'document_root' : '/path/to/my/files/',
+         'directory_index' : ('index.html','index.htm'),
+         'extensions' : ('.html','.htm'), }),
+
+ Any of the decorators can be used in this fashion shown in the second
+ example. The secure view is simply a convenience method for the most
+ common case of loging_required.
+
+ This method does require that the "registration/login.html" template
+ exists and that LOGIN_URL and LOGIN_REDIRECT_URL be set in your
+ settings file. You will also need to include the following in your
+ URLconf:
+
+    (r'^accounts/login/$', 'django.contrib.auth.views.login'),
+
+Parameters
+----------
+
+Both static_expander.views.serve and static_expander.views.secure accept
+the following parameters.
+
+ document_root
+    Specifies the directory to use as the document root to serve files
+    from.  Default value is None, this must be specified or the expander
+    will always return a page does not exist error.
+
+ directory_index
+    Specifies the files to use as the directory index if the url ends
+    with a directory. Default list includes only ('index.html').
+    
+ extensions
+    Specifies the extensions that may be included in inline, file
+    extensions not in this list are still handled by static_expander but
+    are not included inside of the template. The default list includes
+    only ('.html').
+
+ base_template
+    Specifies the template to expand the pages into. The default value
+    is 'expander/base.html'.
+
+ content_as_template
+    Controls the parsing of included files. If set to True the included
+    files are parsed as a template. Default value is 'False'.
+
+Template Tags
+-------------
+
+One template tag is included as part of the default distribution of the
+static_expander. This tag provides the ability to include content
+relative to the document root, but differs from the Django built-ins in
+that it can walk the directory structure down to the document root until
+it finds the file to include.
+
+To use the second form, relative to the current url you must adjust the
+TEMPLATE_CONTEXT_PROCESSORS in settings.py to include
+'django.core.context_processors.request' or relative includes will not
+work.
+
+Examples
+--------
+
+ Include the tag
+
+    {% load dynamic_include %}
+
+ Form 1:
+
+    {% dynamic_include /path/from/document_root [no_recurse] [as var_name] %}
+
+    {% dynamic_include /path/from/document_root %}
+    {% dynamic_include /path/from/document_root True %}
+    {% dynamic_include /path/from/document_root True as my_var %}
+    {% dynamic_include /path/from/document_root as my_var %}
+
+ Form 2:
+
+    {% dynamic_include relative_to_current_url.html [no_recurse] [as var_name] %}
+
+    {% dynamic_include relative_to_current_url.html %}
+    {% dynamic_include relative_to_current_url.html True %}
+    {% dynamic_include relative_to_current_url.html True as my_var %}
+    {% dynamic_include relative_to_current_url.html as my_var %}
+
+ This form will start from the current URL and work down to the document
+ root looking for "relative_to_current_url.html" in each directory until
+ it finds the file.
